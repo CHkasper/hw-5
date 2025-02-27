@@ -9,6 +9,7 @@ from aiogram.types import Message, ReplyKeyboardMarkup, KeyboardButton
 from database import add_user, update_schedule, get_scheduled_users, get_all_users
 from config import load_dotenv
 import os
+import datetime
 
 load_dotenv()
 
@@ -111,9 +112,14 @@ async def schedule_messages():
 
 async def send_scheduled_messages():
     while True:
-        await schedule_messages()
-        schedule.run_pending()
-        await asyncio.sleep(1)
+        users = get_scheduled_users()
+        now = datetime.datetime.now().strftime("%H:%M")
+
+        for chat_id, schedule_time in users:
+            if schedule_time == now:
+                asyncio.create_task(send_message_task(chat_id))
+
+        await asyncio.sleep(60)
 
 async def main():
     asyncio.create_task(send_scheduled_messages())
